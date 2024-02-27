@@ -104,8 +104,9 @@ class BookVocabularyExtractor:
         pattern = r'\b[a-zA-Z]+\b'
         words = re.findall(pattern, text)
 
-        
-        return words, text
+        self.words=words
+        self.text=text
+        return
 
     def mobi_library_function(file_path):
         tempdir, filepath = mobi.extract(file_path)
@@ -248,9 +249,9 @@ class BookVocabularyExtractor:
 
     def main(self):
         
-        self.create_directory(directory_path)
+        self.create_directory(self.directory_path)
+        self.get_words_from_file(self.file_path)
 
-        words, text_du_livre = self.get_words_from_file(file_path)
 
         # Find uncommon_words
         text_du_livre=text_du_livre.replace('\n',"").replace('>','')
@@ -263,16 +264,16 @@ class BookVocabularyExtractor:
         # print(uncommon_words)
 
         # Save the book raw txt
-        with open(f"{directory_path}/_raw_text_{directory_path}.md", "w", encoding="utf-8") as markdown_file:
+        with open(f"{self.directory_path}/_raw_text_{self.directory_path}.md", "w", encoding="utf-8") as markdown_file:
             markdown_file.write(text_du_livre)
 
         # citations = find_quotes(uncommon_words[:10],text_du_livre)
 
         # Produce markdown_content
-        markdown_content = self.create_markdown_document(uncommon_words[:70], directory_path)
+        markdown_content = self.create_markdown_document(uncommon_words[:70], self.directory_path)
 
         # Save the content to a Markdown file
-        with open(f"{directory_path}/_Glossaire {directory_path}.md", "w", encoding="utf-8") as markdown_file:
+        with open(f"{self.directory_path}/_Glossaire {self.directory_path}.md", "w", encoding="utf-8") as markdown_file:
             markdown_file.write(markdown_content)
 
 
@@ -280,7 +281,7 @@ class BookVocabularyExtractor:
         delimiter = "\n"
         raw_string = delimiter.join(raw_list)
         # Save the content to a Markdown file
-        with open(f"{directory_path}/_raw_words {directory_path}.md", "w", encoding="utf-8") as markdown_file_raw:
+        with open(f"{self.directory_path}/_raw_words {self.directory_path}.md", "w", encoding="utf-8") as markdown_file_raw:
             markdown_file_raw.write(raw_string)   
 
 if __name__ == "__main__":
