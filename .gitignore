@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+bin/
+lib/
+include/
+
+# Local development configuration
+.env
+
+# IDE files
+.idea/
+.vscode/
+
+# Dependency management
+pip-lock.txt
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Miscellaneous
+*.DS_Store
+Thumbs.db
+
+# Ignore the "book" directory
+Character/
+Output/
+
+# Ignore "book" files
+*.epub
+*.mobi
+*.pdf
+
+
