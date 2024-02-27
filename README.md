@@ -1,4 +1,3 @@
-```markdown
 # Vocabulary Builder
 
 ## Overview
@@ -38,6 +37,3 @@ Feel free to contribute by submitting bug reports, feature requests, or pull req
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-```
-
-Replace placeholders like `your-username` with your GitHub username and update the paths and instructions accordingly. This README provides a brief overview, usage instructions, customization options, and information about contributing and licensing.
