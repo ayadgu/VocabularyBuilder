@@ -5,6 +5,7 @@ import nltk
 import pycountry
 import os 
 import PyPDF2
+import json
 import argparse
 import ebooklib
 
@@ -34,16 +35,20 @@ class BookVocabularyExtractor:
         self.file_path = args.source
         self.directory_path = args.source.split(".")[0]
 
-        self.known_words_path=['known_words_path']
-        self.known_names_path=['known_names_path']
+        self.known_words_path=data['known_words_path']
+        self.known_names_path=data['known_names_path']
 
         with open(f"Input/{self.known_words_path}", encoding="utf8") as f:
             self.known_words = f.read().splitlines()
 
-        with open(f"Input/{self.known_words_path}", encoding="utf8") as f:
+        with open(f"Input/{self.known_names_path}", encoding="utf8") as f:
             self.known_names = f.read().splitlines()
 
-    def gettextfrompdf(file):
+        print("file_path",self.file_path)
+        print("directory_path",self.directory_path)
+
+
+    def gettextfrompdf(self):
         # Open the PDF file
         pdf_file = open(file, "rb")
 
@@ -70,9 +75,9 @@ class BookVocabularyExtractor:
         text = " ".join(words)
         return text
 
-    def read_epub(file_path):
-        print(file_path)
-        book = epub.read_epub(file_path)
+    def read_epub(self):
+        print(self.file_path)
+        book = epub.read_epub(self.file_path)
         content = ""
 
         for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
@@ -80,25 +85,32 @@ class BookVocabularyExtractor:
 
         return content
 
-    def get_words_from_file(self,file_path):
-        if file_path.startswith('http'):
+    def get_words_from_file(self):
+        print("-----\n")
+        print(self.file_path.startswith('http'))
+        print(self.file_path.endswith('.pdf'))
+        print(self.file_path.endswith('.mobi'))
+        print(self.file_path.endswith('.epub'))
+        print(self.file_path.endswith('.txt'))
+
+        if self.file_path.startswith('http'):
             # If the input is a URL
-            html = urlopen(file_path).read()
+            html = urlopen(self.file_path).read()
             soup = BeautifulSoup(html, 'html.parser')
             text = soup.get_text()
 
-        elif file_path.endswith('.pdf'):
-            text = self.gettextfrompdf(file_path)
+        elif self.file_path.endswith('.pdf'):
+            text = self.gettextfrompdf()
 
-        elif file_path.endswith('.mobi'):
-            text = self.mobi_library_function(file_path)
+        elif self.file_path.endswith('.mobi'):
+            text = self.mobi_library_function()
 
-        elif file_path.endswith('.epub'):
-            text = self.read_epub(file_path)
+        elif self.file_path.endswith('.epub'):
+            text = self.read_epub()
             pass
 
-        elif file_path.endswith('.txt'):
-            with open(file_path, 'r', encoding='utf-8') as txt_file:
+        elif self.file_path.endswith('.txt'):
+            with open(self.file_path, 'r', encoding='utf-8') as txt_file:
                 text = txt_file.read()
 
         else:
@@ -112,11 +124,11 @@ class BookVocabularyExtractor:
         words = re.findall(pattern, text)
 
         self.words=words
-        self.text=text
+        self.text_du_livre=text
         return
 
-    def mobi_library_function(file_path):
-        tempdir, filepath = mobi.extract(file_path)
+    def mobi_library_function(self):
+        tempdir, filepath = mobi.extract(self.file_path)
         file = open(filepath, encoding="utf8")
         content=file.read()
         words =  html2text.html2text(content)
@@ -145,13 +157,15 @@ class BookVocabularyExtractor:
                         len(word)>1 ]
 
         self.uncommon_words = filtered_words 
+        # print(filtered_words)
 
     def create_markdown_document(self):
         markdown_content = f"# Uncommon Words and Meanings\n"
-
-        for word in self.uncommon_words:
+        # print(self.uncommon_words)
+        for word in self.uncommon_words[:50]:
             word = wnl.lemmatize(word, "v")
-            synsets = self.get_word_syn(word,self.book_langage)
+            print(word)
+            synsets = self.get_word_syn(word)
 
             markdown_individual = f""
             if len(synsets) == 0 or not isinstance(synsets, list) :
@@ -166,6 +180,8 @@ class BookVocabularyExtractor:
                     for example in synset.examples():
                         markdown_individual+=f"- {example}"
                     markdown_individual+=f"\n"
+                # print(markdown_individual[:50])
+                print(f"{self.directory_path}/Vocabulary/{word.capitalize()}.md")
                 with open(f"{self.directory_path}/Vocabulary/{word.capitalize()}.md", "w", encoding="utf-8") as markdown_vocabulary:
                     markdown_vocabulary.write(markdown_individual)
             markdown_content+=f"{markdown_individual}"
@@ -173,7 +189,7 @@ class BookVocabularyExtractor:
         return markdown_content
 
 
-    def get_word_syn(word,lang):
+    def get_word_syn(self,word):
         # Get the synsets (sets of synonyms) for the word from WordNet
         synsets = wordnet.synsets(word)
 
@@ -182,9 +198,9 @@ class BookVocabularyExtractor:
         # Take the first synset as an example
         return synsets
         
-    def gettext(file):
+    def gettext(self):
         
-        text_file = open(file, "r")
+        text_file = open(self.file, "r")
         text = text_file.read().lower().replace(".", "").replace("--", "")
         
         pattern = r"[a-zA-Z\-\.'/]+"
@@ -195,18 +211,17 @@ class BookVocabularyExtractor:
 
 
     def find_quotes(words_to_find, text):
-        print(words_to_find)
-        text
+        # print(words_to_find)
         # words_to_find = ["chien", "chat", "loup"]
         mot_pattern = "|".join(map(re.escape, words_to_find))
-        print(mot_pattern)
+        # print(mot_pattern)
         
         citations_mots =[]
 
         # citations_mots = re.findall(fr'(.*?({mot_pattern})[\s|.].*?)', text)
 
 
-        print(len(citations_mots))
+        # print(len(citations_mots))
         for citation in citations_mots:
             print(citation[0])
 
@@ -238,34 +253,35 @@ class BookVocabularyExtractor:
         self.book_langage = book_langage
 
 
-    def create_directory(directory_path):
+    def create_directory(self):
         try: 
-            os.makedirs(directory_path, exist_ok = True) 
-            os.makedirs(directory_path+"/Vocabulary", exist_ok = True) 
-            print("Directory '%s' created successfully" % directory_path) 
+            os.makedirs(self.directory_path, exist_ok = True) 
+            os.makedirs(self.directory_path+"/Vocabulary", exist_ok = True) 
+            print("Directory '%s' created successfully" % self.directory_path) 
         except OSError as error: 
-            print("Directory '%s' can not be created" % directory_path) 
+            print("Directory '%s' can not be created" % self.directory_path) 
         return 
     
-    def save_markdown_document(self,markdown_content,repertory=""):
+    def save_markdown_document(self,markdown_content,word=f"_Glossaire"):
+        print(word)
         # Save the content to a Markdown file
-        with open(f"{self.directory_path}/{repertory}.md", "w", encoding="utf-8") as markdown_file:
+        with open(f"{self.directory_path}/{word}.md", "w", encoding="utf-8") as markdown_file:
             markdown_file.write(markdown_content)
 
     def main(self):
         
-        self.create_directory(self.directory_path)
-        self.get_words_from_file(self.file_path)
+        self.create_directory()
+        self.get_words_from_file()
 
 
         # Find uncommon_words
-        text_du_livre=text_du_livre.replace('\n',"").replace('>','')
-        text_du_livre = re.sub('\[\]\(([^)]+)\)', '', text_du_livre)
+        self.text_du_livre=self.text_du_livre.replace('\n',"").replace('>','')
+        text_du_livre = re.sub('\[\]\(([^)]+)\)', '', self.text_du_livre)
         # text_du_livre = re.sub('.*http.*', '', text_du_livre)
         
         # Find book langage
         # set variable book_langage
-        self.get_text_language(words[200:500])
+        self.get_text_language(self.words[200:500])
 
         # Find uncommon words
         self.find_uncommon_words(self.words)
@@ -278,9 +294,9 @@ class BookVocabularyExtractor:
         # citations = find_quotes(uncommon_words[:10],text_du_livre)
 
         # Produce markdown_content
-        markdown_content = self.create_markdown_document(self.uncommon_words[:70], self.directory_path)
+        markdown_content = self.create_markdown_document()
 
-        self.save_markdown_document(self,markdown_content,"directory")
+        self.save_markdown_document(markdown_content)
         
 
 
@@ -295,5 +311,5 @@ if __name__ == "__main__":
     with open('config.json') as config_file:
         data = json.load(config_file)
 
-    vocabularyBuilder = BookVocabularyExtractor()
+    vocabularyBuilder = BookVocabularyExtractor(data)
     vocabularyBuilder.main()
