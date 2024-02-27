@@ -6,6 +6,7 @@ import pycountry
 import os 
 import PyPDF2
 import argparse
+import ebooklib
 
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
@@ -25,9 +26,14 @@ nltk.download("words", quiet=True, raise_on_error=True)
 
 class BookVocabularyExtractor:
     def __init__(self, data=[]):
-        #Work to do : data variable to write
+        parser = argparse.ArgumentParser(description="Find uncommon words in a document.")
+        parser.add_argument('-s', '--source', required=True, help="File path or URL of the document")
+        args = parser.parse_args()
+
         # """Parameter initialization"""
-        # self.directory_path = data['directory_path']
+        self.file_path = args.source
+        self.directory_path = args.source.split(".")[0]
+
         return
 
     def gettextfrompdf(file):
@@ -67,7 +73,7 @@ class BookVocabularyExtractor:
 
         return content
 
-    def get_words_from_file(file_path):
+    def get_words_from_file(self,file_path):
         if file_path.startswith('http'):
             # If the input is a URL
             html = urlopen(file_path).read()
@@ -75,13 +81,13 @@ class BookVocabularyExtractor:
             text = soup.get_text()
 
         elif file_path.endswith('.pdf'):
-            text = gettextfrompdf(file_path)
+            text = self.gettextfrompdf(file_path)
 
         elif file_path.endswith('.mobi'):
-            text = mobi_library_function(file_path)
+            text = self.mobi_library_function(file_path)
 
         elif file_path.endswith('.epub'):
-            text = read_epub(file_path)
+            text = self.read_epub(file_path)
             pass
 
         elif file_path.endswith('.txt'):
@@ -241,12 +247,7 @@ class BookVocabularyExtractor:
         return 
 
     def main(self):
-        parser = argparse.ArgumentParser(description="Find uncommon words in a document.")
-        parser.add_argument('-s', '--source', required=True, help="File path or URL of the document")
-        args = parser.parse_args()
-
-        file_path = args.source
-        directory_path = file_path.split(".")[0]
+        
         self.create_directory(directory_path)
 
         words, text_du_livre = self.get_words_from_file(file_path)
@@ -283,6 +284,5 @@ class BookVocabularyExtractor:
             markdown_file_raw.write(raw_string)   
 
 if __name__ == "__main__":
-
     extractor = BookVocabularyExtractor()
     extractor.main()
