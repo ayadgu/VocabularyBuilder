@@ -115,7 +115,7 @@ class BookVocabularyExtractor:
         words =  html2text.html2text(content)
         return words
 
-    def find_uncommon_words(words,text_language='english'):
+    def find_uncommon_words(self,words,text_language='english'):
         # Known Words to filter with
         with open('known.txt', encoding="utf8") as f:
             known_words = f.read().splitlines()
@@ -140,7 +140,9 @@ class BookVocabularyExtractor:
                         word.lower() not in (known_words or known_names) and
                         len(word)>1 ]
 
-        return filtered_words
+        self.uncommon_words = filtered_words 
+
+        return
 
     def create_markdown_document(uncommon_words, directory_path,text_language='eng'):
         markdown_content = f"# Uncommon Words and Meanings\n"
@@ -226,17 +228,15 @@ class BookVocabularyExtractor:
 
         return quotes
 
-    def get_text_language(words):
-
+    def get_text_language(self,words):
         text_language = detect(" ".join(words))
         # This is a safer way to extract the country code from something
         # like en-GB (thanks ivan_pozdeev)
         # lang_code = text_language[:text_language.index('-')] if '-' in text_language else text_language
-
-        # aragonese = pycountry.languages.get(alpha_2='an')
         lang = pycountry.languages.get(alpha_2=text_language)
+        self.lang = lang
 
-        return lang
+        return
 
     def create_directory(directory_path):
         try: 
@@ -258,9 +258,11 @@ class BookVocabularyExtractor:
         text_du_livre = re.sub('\[\]\(([^)]+)\)', '', text_du_livre)
         # text_du_livre = re.sub('.*http.*', '', text_du_livre)
         
+        # Find book langage
+        self.get_text_language(words[200:500])
 
-        lang = self.get_text_language(words[200:500])
-        uncommon_words = self.find_uncommon_words(words,lang)
+        # Find uncommon words
+        self.find_uncommon_words(self.words,self.lang)
         # print(uncommon_words)
 
         # Save the book raw txt
@@ -270,14 +272,14 @@ class BookVocabularyExtractor:
         # citations = find_quotes(uncommon_words[:10],text_du_livre)
 
         # Produce markdown_content
-        markdown_content = self.create_markdown_document(uncommon_words[:70], self.directory_path)
+        markdown_content = self.create_markdown_document(self.uncommon_words[:70], self.directory_path)
 
         # Save the content to a Markdown file
         with open(f"{self.directory_path}/_Glossaire {self.directory_path}.md", "w", encoding="utf-8") as markdown_file:
             markdown_file.write(markdown_content)
 
 
-        raw_list = [str(element) for element in uncommon_words]
+        raw_list = [str(element) for element in self.uncommon_words]
         delimiter = "\n"
         raw_string = delimiter.join(raw_list)
         # Save the content to a Markdown file
