@@ -1,5 +1,3 @@
-Certainly! Here's a concise README document for your vocabulary builder project:
-
 ```markdown
 # Vocabulary Builder
 
