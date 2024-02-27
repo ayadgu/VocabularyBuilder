@@ -25,7 +25,7 @@ nltk.download("wordnet", quiet=True, raise_on_error=True)
 nltk.download("words", quiet=True, raise_on_error=True)
 
 class BookVocabularyExtractor:
-    def __init__(self, data=[]):
+    def __init__(self, data):
         parser = argparse.ArgumentParser(description="Find uncommon words in a document.")
         parser.add_argument('-s', '--source', required=True, help="File path or URL of the document")
         args = parser.parse_args()
@@ -34,7 +34,14 @@ class BookVocabularyExtractor:
         self.file_path = args.source
         self.directory_path = args.source.split(".")[0]
 
-        return
+        self.known_words_path=['known_words_path']
+        self.known_names_path=['known_names_path']
+
+        with open(f"Input/{self.known_words_path}", encoding="utf8") as f:
+            self.known_words = f.read().splitlines()
+
+        with open(f"Input/{self.known_words_path}", encoding="utf8") as f:
+            self.known_names = f.read().splitlines()
 
     def gettextfrompdf(file):
         # Open the PDF file
@@ -115,45 +122,40 @@ class BookVocabularyExtractor:
         words =  html2text.html2text(content)
         return words
 
-    def find_uncommon_words(self,words,text_language='english'):
+    def find_uncommon_words(self,words,book_langage='english'):
         # Known Words to filter with
-        with open('known.txt', encoding="utf8") as f:
+        with open(f"Input/{self.known_words_path}", encoding="utf8") as f:
             known_words = f.read().splitlines()
         
         # Known Names to filter with
-        with open('known_names.txt', encoding="utf8") as f:
+        with open(f"Input/{self.known_names_path}", encoding="utf8") as f:
             known_names = f.read().splitlines()
         
         # Count the occurrences of each word
         word_counts = Counter(words)
 
-
         # Remove stopwords
-        stop_words = set(stopwords.words(text_language.name.lower()))
-
-        # stop_words = set(stopwords.words('english'))
+        stop_words = set(stopwords.words(self.book_langage.name.lower()))
 
         filtered_words = [word for word, count in word_counts.items() 
                         if count == 1 and
                         word.isalpha() and
                         word not in stop_words and
-                        word.lower() not in (known_words or known_names) and
+                        word.lower() not in (self.known_words or self.known_names) and
                         len(word)>1 ]
 
         self.uncommon_words = filtered_words 
 
-        return
-
-    def create_markdown_document(uncommon_words, directory_path,text_language='eng'):
+    def create_markdown_document(self):
         markdown_content = f"# Uncommon Words and Meanings\n"
 
-        for word in uncommon_words:
+        for word in self.uncommon_words:
             word = wnl.lemmatize(word, "v")
-            synsets = get_word_syn(word,text_language)
+            synsets = self.get_word_syn(word,self.book_langage)
 
             markdown_individual = f""
             if len(synsets) == 0 or not isinstance(synsets, list) :
-                print(f"{word}, {synsets}")
+                # print(f"{word}, {synsets}")
                 # or not isinstance(synsets, list)
                 continue
             
@@ -164,8 +166,7 @@ class BookVocabularyExtractor:
                     for example in synset.examples():
                         markdown_individual+=f"- {example}"
                     markdown_individual+=f"\n"
-                
-                with open(f"{directory_path}/Vocabulary/{word.capitalize()}.md", "w", encoding="utf-8") as markdown_vocabulary:
+                with open(f"{self.directory_path}/Vocabulary/{word.capitalize()}.md", "w", encoding="utf-8") as markdown_vocabulary:
                     markdown_vocabulary.write(markdown_individual)
             markdown_content+=f"{markdown_individual}"
 
@@ -233,10 +234,9 @@ class BookVocabularyExtractor:
         # This is a safer way to extract the country code from something
         # like en-GB (thanks ivan_pozdeev)
         # lang_code = text_language[:text_language.index('-')] if '-' in text_language else text_language
-        lang = pycountry.languages.get(alpha_2=text_language)
-        self.lang = lang
+        book_langage = pycountry.languages.get(alpha_2=text_language)
+        self.book_langage = book_langage
 
-        return
 
     def create_directory(directory_path):
         try: 
@@ -246,6 +246,11 @@ class BookVocabularyExtractor:
         except OSError as error: 
             print("Directory '%s' can not be created" % directory_path) 
         return 
+    
+    def save_markdown_document(self,markdown_content,repertory=""):
+        # Save the content to a Markdown file
+        with open(f"{self.directory_path}/{repertory}.md", "w", encoding="utf-8") as markdown_file:
+            markdown_file.write(markdown_content)
 
     def main(self):
         
@@ -259,10 +264,11 @@ class BookVocabularyExtractor:
         # text_du_livre = re.sub('.*http.*', '', text_du_livre)
         
         # Find book langage
+        # set variable book_langage
         self.get_text_language(words[200:500])
 
         # Find uncommon words
-        self.find_uncommon_words(self.words,self.lang)
+        self.find_uncommon_words(self.words)
         # print(uncommon_words)
 
         # Save the book raw txt
@@ -274,9 +280,8 @@ class BookVocabularyExtractor:
         # Produce markdown_content
         markdown_content = self.create_markdown_document(self.uncommon_words[:70], self.directory_path)
 
-        # Save the content to a Markdown file
-        with open(f"{self.directory_path}/_Glossaire {self.directory_path}.md", "w", encoding="utf-8") as markdown_file:
-            markdown_file.write(markdown_content)
+        self.save_markdown_document(self,markdown_content,"directory")
+        
 
 
         raw_list = [str(element) for element in self.uncommon_words]
@@ -287,5 +292,8 @@ class BookVocabularyExtractor:
             markdown_file_raw.write(raw_string)   
 
 if __name__ == "__main__":
-    extractor = BookVocabularyExtractor()
-    extractor.main()
+    with open('config.json') as config_file:
+        data = json.load(config_file)
+
+    vocabularyBuilder = BookVocabularyExtractor()
+    vocabularyBuilder.main()
