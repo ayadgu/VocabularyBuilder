@@ -24,6 +24,12 @@ nltk.download("wordnet", quiet=True, raise_on_error=True)
 nltk.download("words", quiet=True, raise_on_error=True)
 
 class BookVocabularyExtractor:
+    def __init__(self, data=[]):
+        #Work to do : data variable to write
+        # """Parameter initialization"""
+        # self.directory_path = data['directory_path']
+        return
+
     def gettextfrompdf(file):
         # Open the PDF file
         pdf_file = open(file, "rb")
@@ -220,7 +226,6 @@ class BookVocabularyExtractor:
         # like en-GB (thanks ivan_pozdeev)
         # lang_code = text_language[:text_language.index('-')] if '-' in text_language else text_language
 
-
         # aragonese = pycountry.languages.get(alpha_2='an')
         lang = pycountry.languages.get(alpha_2=text_language)
 
@@ -277,13 +282,7 @@ class BookVocabularyExtractor:
         with open(f"{directory_path}/_raw_words {directory_path}.md", "w", encoding="utf-8") as markdown_file_raw:
             markdown_file_raw.write(raw_string)   
 
-    def __init__(self, data=[]):
-        #Work to do : data variable to write
-        """Parameter initialization"""
-        # self.directory_path = data['directory_path']
-        # self.directory_path = data['directory_path']
-
 if __name__ == "__main__":
-    
+
     extractor = BookVocabularyExtractor()
     extractor.main()
