@@ -6,7 +6,6 @@ The Vocabulary Builder is a Python script designed to analyze books in various f
 
 ## Features
 - Supports epub, mobi, and pdf formats.
-- Identifies difficult words based on a chosen criteria.
 - Creates markdown files for easy learning and reference.
 
 ## Getting Started
@@ -14,30 +13,25 @@ The Vocabulary Builder is a Python script designed to analyze books in various f
 ### Prerequisites
 - Python 3.x
 - [EbookLib](https://github.com/aerkalov/ebooklib) for epub and mobi support
-- [PyMuPDF](https://github.com/pymupdf/PyMuPDF) for pdf support
-
-Install the required dependencies:
-```bash
-pip install EbookLib PyMuPDF
-```
+- [PyPDF2](https://github.com/py-pdf/pypdf) for pdf support
 
 ### Usage
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/vocabulary-builder.git
-   cd vocabulary-builder
+   git clone https://github.com/ayadgu/VocabularyBuilder.git
+   cd VocabularyBuilder
    ```
 
 2. Run the script with the path to your book file:
    ```bash
+   pip install -r requirement.txt
    python vocabulary_builder.py path/to/your/book.epub
    ```
 
 3. Check the generated markdown files in the output directory.
 
 ## Customization
-- Adjust the difficulty criteria in the script to suit your preferences.
-- Explore additional features to enhance the vocabulary building process.
+- NA
 
 ## Contributing
 Feel free to contribute by submitting bug reports, feature requests, or pull requests.
